@@ -1,115 +1,224 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    home: App(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+class ListItem {
+  String todoText;
+  bool todoCheck;
+  ListItem(this.todoText, this.todoCheck);
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class _strikeThrough extends StatelessWidget {
+  final String todoText;
+  final bool todoCheck;
+  _strikeThrough(this.todoText, this.todoCheck) : super();
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  Widget _widget() {
+    if (todoCheck) {
+      return Text(
+        todoText,
+        style: TextStyle(
+          decoration: TextDecoration.lineThrough,
+          fontStyle: FontStyle.italic,
+          fontSize: 20.0,
+          color: Colors.pinkAccent[200],
+        ),
+      );
+    } else {
+      return Text(
+        todoText,
+        style: TextStyle(fontSize: 20.0),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    return _widget();
+  }
+}
+
+class App extends StatefulWidget {
+  @override
+  AppState createState() {
+    return AppState();
+  }
+}
+
+class AppState extends State<App> {
+  var counter = 0;
+
+  var textController = TextEditingController();
+  var popUpTextController = TextEditingController();
+
+  List<ListItem> WidgetList = [];
+
+  @override
+  void dispose() {
+    textController.dispose();
+    popUpTextController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text("Todo List App"),
+        backgroundColor: Color.fromRGBO(255, 192, 203, 1),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            child: TextField(
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.pinkAccent),
+                  ),
+                  hintText: "Enter your task here:"),
+              style: const TextStyle(
+                fontSize: 18.0,
+              ),
+              controller: textController,
+              cursorWidth: 5.0,
+              autocorrect: true,
+              autofocus: true,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
+          ),
+          Container(
+            margin: const EdgeInsets.fromLTRB(0, 20, 0, 20),
+            child: RaisedButton(
+              child: Text("Add Task"),
+              onPressed: () {
+                if (textController.text.isNotEmpty) {
+                  WidgetList.add(new ListItem(textController.text, false));
+                  setState(() {
+                    textController.clear();
+                  });
+                }
+              },
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: ReorderableListView(
+              children: <Widget>[
+                for (final widget in WidgetList)
+                  GestureDetector(
+                    key: Key(widget.todoText),
+                    child: Dismissible(
+                      key: Key(widget.todoText),
+                      child: CheckboxListTile(
+                        //key: ValueKey("Checkboxtile $widget"),
+                        value: widget.todoCheck,
+                        title:
+                            _strikeThrough(widget.todoText, widget.todoCheck),
+                        onChanged: (checkValue) {
+                          //_strikethrough toggle
+                          setState(() {
+                            if (!checkValue!) {
+                              widget.todoCheck = false;
+                            } else {
+                              widget.todoCheck = true;
+                            }
+                          });
+                        },
+                      ),
+                      background: Container(
+                        child: Icon(Icons.delete),
+                        alignment: Alignment.centerRight,
+                        color: Colors.pink[300],
+                      ),
+                      confirmDismiss: (dismissDirection) {
+                        return showDialog(
+                            //On Dismissing
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text("Delete Todo?"),
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("OK"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  ), //OK Button
+                                  FlatButton(
+                                    child: Text("Cancel"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ), //Cancel Button
+                                ],
+                              );
+                            });
+                      },
+                      direction: DismissDirection.endToStart,
+                      movementDuration: const Duration(milliseconds: 200),
+                      onDismissed: (dismissDirection) {
+                        //Delete Todo
+                        WidgetList.remove(widget);
+                        Fluttertoast.showToast(msg: "Todo Deleted!");
+                      },
+                    ),
+                    onDoubleTap: () {
+                      popUpTextController.text = widget.todoText;
+                      //For Editing Todo
+                      showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Edit Todo"),
+                              content: TextFormField(
+                                controller: popUpTextController,
+                              ),
+                              actions: <Widget>[
+                                FlatButton(
+                                  child: Text("OK"),
+                                  onPressed: () {
+                                    setState(() {
+                                      widget.todoText =
+                                          popUpTextController.text;
+                                    });
+                                    Navigator.of(context).pop(true);
+                                  },
+                                ), //OK Button
+                                FlatButton(
+                                  child: Text("Cancel"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                ), //Cancel Button
+                              ],
+                            );
+                          });
+                    },
+                  )
+              ],
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (oldIndex < newIndex) {
+                    newIndex -= 1;
+                  }
+                  var replaceWiget = WidgetList.removeAt(oldIndex);
+                  WidgetList.insert(newIndex, replaceWiget);
+                });
+              },
+            ),
+          )
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
